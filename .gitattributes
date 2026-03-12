@@ -1,0 +1,12 @@
+# Normalize line endings to LF for all text files
+*         text=auto eol=lf
+
+# Explicitly binary — never touch line endings
+*.db      binary
+*.dll     binary
+*.node    binary
+*.png     binary
+*.jpg     binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary

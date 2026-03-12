@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Role values: USER | MECHANIC | ADMIN
+// RequestStatus values: PENDING | ACCEPTED | ON_WAY | ARRIVED | COMPLETED | CANCELLED
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mechanic        Mechanic?
+  serviceRequests ServiceRequest[] @relation("UserRequests")
+  reviewsGiven    Review[]         @relation("UserReviews")
+}
+
+model Mechanic {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio             String   @default("")
+  specializations String   @default("General")
+  vehicleTypes    String   @default("Car,Motorcycle,Truck")
+  lat             Float    @default(0)
+  lng             Float    @default(0)
+  serviceRadius   Float    @default(20)
+  isApproved      Boolean  @default(false)
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  serviceRequests ServiceRequest[] @relation("MechanicRequests")
+  reviewsReceived Review[]         @relation("MechanicReviews")
+}
+
+model ServiceRequest {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation("UserRequests", fields: [userId], references: [id])
+  mechanicId       String?
+  mechanic         Mechanic? @relation("MechanicRequests", fields: [mechanicId], references: [id])
+  status           String   @default("PENDING")
+  latitude         Float
+  longitude        Float
+  address          String   @default("")
+  vehicleType      String
+  vehicleModel     String   @default("")
+  issueDescription String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  review Review?
+}
+
+model Review {
+  id               String         @id @default(cuid())
+  serviceRequestId String         @unique
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  userId           String
+  user             User           @relation("UserReviews", fields: [userId], references: [id])
+  mechanicId       String
+  mechanic         Mechanic       @relation("MechanicReviews", fields: [mechanicId], references: [id])
+  rating           Int
+  comment          String         @default("")
+  createdAt        DateTime       @default(now())
+}
